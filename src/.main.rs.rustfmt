@@ -1,0 +1,51 @@
+mod wallet;
+//mod script;
+mod transaction;
+use crate::wallet::Wallet;
+use script::{UnsignedTransactionInput, TransactionInputSigner, SignatureVersion};
+
+fn main() -> std::io::Result<()> {
+    //let wallet = Wallet::generate_key("mainnet");    
+    let wallet = Wallet::open("privkey.txt").unwrap();    
+    //println!("{:?}", wallet);
+    let address_hash = wallet.public().address_hash();
+    //println!("{:?}", public);
+    let output = transaction::output();
+    //let outputs = transaction::outputs(output);
+    let input = transaction::input();
+    println!("{:?}", &input);
+
+    // sign input
+    // unsigned transaction
+    let unsigned_transaction: UnsignedTransactionInput = input.clone().into();
+    println!("{:?}", &unsigned_transaction);
+    // transaction input signer
+    let signer = TransactionInputSigner{
+        version: 1,
+        inputs: vec![unsigned_transaction],
+        outputs: vec![output],
+        lock_time: 0
+    };
+    println!("{:?}", &signer);
+	input.    
+    // signed input
+    let script = input.script_sig.into();
+    let signed_input = signer.signed_input(
+        &wallet.key,
+        0,
+        100,
+        &script,
+        SignatureVersion::Base,
+        0
+        );
+    println!("{:?}", &signed_input); 
+    
+    // build transaction
+    let signed_inputs = vec![signed_input];    
+    let raw_tx = transaction::create_raw_transaction(signed_inputs, outputs);
+    
+    println!("{:?}", raw_tx.unwrap().inputs);
+    //let hex = transaction::hex_tx(raw_tx.unwrap());
+
+    Ok(())
+}
